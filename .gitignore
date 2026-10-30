@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.env
+tmp/*
+!tmp/.gitkeep
+tests/fixtures/*.pdf
+tests/fixtures/*.txt

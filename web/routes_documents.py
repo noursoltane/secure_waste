@@ -8,6 +8,7 @@ from flask import (
 from pathlib import Path
 
 from core.upload import validate_upload, UploadError
+from core.extraction import extract_pages, ExtractionError
 
 
 documents_bp = Blueprint("documents", __name__)
@@ -43,10 +44,23 @@ def upload_document():
             destination.unlink(missing_ok=True)
             raise
 
+        try:
+            pages = extract_pages(destination)
+        except ExtractionError as error:
+            destination.unlink(missing_ok=True)
+            message = (
+                "This PDF has no selectable text. OCR is not supported yet."
+                if error.code == "NO_TEXT_LAYER"
+                else "Could not extract text from the uploaded file."
+            )
+            return render_template("upload.html", error=message), 400
+
+        # Analysis stays on the local server; no document text is sent to cloud.
+        destination.unlink(missing_ok=True)
         return render_template(
             "upload.html",
             error=None,
-            success="File uploaded successfully!",
+            success=f"File checked successfully: {len(pages)} page(s) extracted.",
             filename=result["filename"],
             fingerprint=result["fingerprint"]
         )
